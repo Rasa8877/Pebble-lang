@@ -12,12 +12,6 @@ dist/
 # VS Code settings
 .vscode/
 
-# PyCharm / JetBrains
-.idea/
-
-# MacOS
-.DS_Store
-
 # Logs and temp files
 *.log
 *.tmp
