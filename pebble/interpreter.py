@@ -1,4 +1,5 @@
 # interpreter.py
+import sys
 
 class ReturnValue(Exception):
     def __init__(self, value):
@@ -9,6 +10,7 @@ class PebbleInterpreter:
         self.vars = {}
         self.functions = {}
 
+    # ----------------- Run -----------------
     def run(self, filename):
         try:
             with open(filename, "r", encoding="utf-8") as f:
@@ -17,12 +19,11 @@ class PebbleInterpreter:
         except Exception as e:
             print(f"[Pebble Error] {e}")
 
+    # ----------------- Execute Block -----------------
     def execute_block(self, lines):
         i = 0
         while i < len(lines):
             line = lines[i].rstrip()
-
-            # Ignore empty lines or comments
             if not line or line.strip().startswith("!"):
                 i += 1
                 continue
@@ -40,7 +41,7 @@ class PebbleInterpreter:
                 i = self.handle_until(lines, i)
                 continue
 
-            # Execute other commands
+            # Other commands
             self.execute_line(line)
             i += 1
 
@@ -63,11 +64,13 @@ class PebbleInterpreter:
     # ----------------- Loops -----------------
     def handle_go(self, lines, index):
         header = lines[index].strip()
-        parts = header.split()
-        if len(parts) < 4 or parts[2] != "in":
+        if " in " not in header:
             raise Exception(f"Invalid go syntax: {header}")
-        var_name = parts[1]
-        collection = self.evaluate(" ".join(parts[3:]))
+        parts = header.split(" in ", 1)
+        var_name = parts[0][3:].strip()  # remove 'go '
+        collection = self.evaluate(parts[1].rstrip(":"))
+        if not isinstance(collection, list):
+            raise Exception(f"go loop expects a list, got {type(collection).__name__}")
         loop_lines = []
         index += 1
         while index < len(lines):
@@ -83,7 +86,7 @@ class PebbleInterpreter:
         return index - 1
 
     def handle_until(self, lines, index):
-        condition = lines[index].strip()[len("until "):]
+        condition = lines[index].strip()[len("until "):].rstrip(":")
         loop_lines = []
         index += 1
         while index < len(lines):
@@ -108,7 +111,7 @@ class PebbleInterpreter:
             print(self.evaluate(line[4:].strip()))
             return
 
-        # Return / out
+        # Out command
         if line.startswith("out "):
             raise ReturnValue(self.evaluate(line[4:].strip()))
 
@@ -125,17 +128,16 @@ class PebbleInterpreter:
 
         raise Exception(f"Unknown command: {line}")
 
-    # ----------------- Evaluation -----------------
+    # ----------------- Evaluate Expressions -----------------
     def evaluate(self, expr):
         expr = expr.strip()
 
-        # Function call inside expression
+        # Function call
         if "(" in expr and ")" in expr:
             fn_name = expr.split("(")[0]
-            args_str = expr[expr.find("(")+1:expr.find(")")]
+            args_str = expr[expr.find("(")+1:expr.rfind(")")]
             args = [self.evaluate(a.strip()) for a in args_str.split(",") if a.strip()]
             if fn_name in self.functions:
-                # Save previous vars to avoid side effects
                 saved_vars = self.vars.copy()
                 try:
                     self.execute_block(self.functions[fn_name])
@@ -236,7 +238,6 @@ class PebbleInterpreter:
 
 # ----------------- Main -----------------
 def main():
-    import sys
     if len(sys.argv) < 2:
         print("Usage: pebble file.pb")
         return
