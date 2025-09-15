@@ -1,0 +1,23 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# VS Code settings
+.vscode/
+
+# PyCharm / JetBrains
+.idea/
+
+# MacOS
+.DS_Store
+
+# Logs and temp files
+*.log
+*.tmp

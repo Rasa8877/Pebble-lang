@@ -1,0 +1,2 @@
+[console_scripts]
+pebble = pebble.interpreter:main
