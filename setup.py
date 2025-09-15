@@ -4,7 +4,7 @@ setup(
     name="pebble-lang",
     version="1.0.0",
     description="Pebble programming language interpreter in Python",
-    author="Your Name",
+    author="Rasa8877",
     author_email="letperhut@gmail.com",
     url="https://github.com/Rasa8877/Pebble-lang",
     packages=find_packages(),
