@@ -1,225 +1,223 @@
 # interpreter.py
-import sys
-import re
 
 class ReturnValue(Exception):
-    """Custom exception to handle function returns"""
     def __init__(self, value):
         self.value = value
 
 class PebbleInterpreter:
     def __init__(self):
-        self.variables = {}
+        self.vars = {}
         self.functions = {}
-        self.commands = {
-            "say": self.cmd_say,
-            "type": self.cmd_type,
-        }
 
     def run(self, filename):
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             lines = f.readlines()
         self.execute_block(lines)
 
-    def execute_block(self, lines, start=0, end=None, local_vars=None, top_level=True):
-        """Execute a block of Pebble code"""
-        if local_vars is None:
-            local_vars = {}
+    def execute_block(self, lines):
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
 
-        i = start
-        while i < (end if end else len(lines)):
-            line = lines[i].rstrip("\n")
-            stripped = line.strip()
-            if not stripped or stripped.startswith("#"):
+            # Skip empty lines
+            if not line:
                 i += 1
                 continue
 
-            # function definition
-            if stripped.startswith("fnc "):
-                name, args, body, new_i = self.parse_function(lines, i)
-                self.functions[name] = (args, body)
-                i = new_i
-                continue
-
-            # if statement
-            if stripped.startswith("if "):
-                condition, body, new_i = self.parse_if(lines, i)
-                if self.evaluate_condition(condition, local_vars):
-                    try:
-                        self.execute_block(body, 0, len(body), local_vars.copy(), top_level=False)
-                    except ReturnValue as rv:
-                        return rv.value
-                i = new_i
-                continue
-
-            # variable assignment
-            if " is " in stripped:
-                name, value = stripped.split(" is ", 1)
-                self.variables[name.strip()] = self.evaluate_expr(value.strip(), local_vars)
+            # Skip comments anywhere
+            if line.startswith("!"):
                 i += 1
                 continue
 
-            # return statement
-            if stripped.startswith("out "):
-                value = self.evaluate_expr(stripped[4:], local_vars)
-                raise ReturnValue(value)
-
-            # built-in commands
-            parts = stripped.split(maxsplit=1)
-            cmd = parts[0]
-            args = parts[1] if len(parts) > 1 else ""
-            if cmd in self.commands:
-                self.commands[cmd](args, local_vars)
-                i += 1
+            # Function definition
+            if line.startswith("fnc "):
+                i = self.handle_function(lines, i)
                 continue
 
-            # function call (top-level)
-            if "(" in stripped and stripped.endswith(")"):
-                result = self.evaluate_expr(stripped, local_vars)
-                if top_level and result is not None:
-                    print(result)
-                i += 1
+            # Loop: go
+            if line.startswith("go "):
+                i = self.handle_go(lines, i)
                 continue
 
-            # unknown
-            print(f"Unknown command: {stripped}")
+            # Loop: until
+            if line.startswith("until "):
+                i = self.handle_until(lines, i)
+                continue
+
+            # Other commands
+            self.execute_line(line)
             i += 1
 
-    # ------------------- Parsing Helpers -------------------
-
-    def parse_function(self, lines, index):
+    # ----------------- Function Handling -----------------
+    def handle_function(self, lines, index):
         header = lines[index].strip()
-        _, rest = header.split(" ", 1)  # remove "fnc"
-        name, args = rest.split("(", 1)
-        name = name.strip()
-        args = args[:-2].strip() if args.endswith("):") else args[:-1].strip()
-        args = [a.strip() for a in args.split(",")] if args else []
+        fn_name = header.split()[1].split("(")[0]
+        fn_lines = []
+        index += 1
 
-        body = []
-        i = index + 1
-        while i < len(lines):
-            if lines[i].startswith("    "):  # 4-space indentation
-                body.append(lines[i][4:])
-                i += 1
-            else:
-                break
-        return name, args, body, i
-
-    def parse_if(self, lines, index):
-        header = lines[index].strip()
-        condition = header[3:-1].strip()  # strip 'if ' and ':'
-        body = []
-        i = index + 1
-        while i < len(lines):
-            if lines[i].startswith("    "):
-                body.append(lines[i][4:])
-                i += 1
-            else:
-                break
-        return condition, body, i
-
-    # ------------------- Execution Helpers -------------------
-
-    def evaluate_expr(self, expr, local_vars):
-        """Evaluate an expression that may contain nested Pebble function calls, variables, or literals"""
-        expr = expr.strip()
-        # function call pattern: funcname(args)
-        func_call_pattern = re.compile(r"^([a-zA-Z_]\w*)\((.*)\)$")
-        match = func_call_pattern.match(expr)
-        if match:
-            name = match.group(1)
-            args_str = match.group(2)
-            args = self.split_args(args_str)
-            evaluated_args = [self.evaluate_expr(a, local_vars) for a in args]
-            return self.call_function(f"{name}({', '.join(map(str, evaluated_args))})", local_vars)
-        # variable
-        if expr in local_vars:
-            return local_vars[expr]
-        if expr in self.variables:
-            return self.variables[expr]
-        # literal or number
-        try:
-            return eval(expr, {}, {**self.variables, **local_vars})
-        except Exception:
-            return expr  # fallback as string
-
-    def split_args(self, args_str):
-        """Split function arguments by commas, handling nested parentheses"""
-        args = []
-        current = ""
-        depth = 0
-        for char in args_str:
-            if char == "(":
-                depth += 1
-            elif char == ")":
-                depth -= 1
-            elif char == "," and depth == 0:
-                args.append(current.strip())
-                current = ""
+        while index < len(lines):
+            line = lines[index].rstrip()
+            if line.strip() == "":
+                index += 1
                 continue
-            current += char
-        if current:
-            args.append(current.strip())
-        return args
+            if line.startswith(" ") or line.startswith("\t"):
+                fn_lines.append(line)
+            else:
+                break
+            index += 1
 
-    def evaluate_condition(self, condition, local_vars):
-        tokens = condition.split()
-        if len(tokens) != 3:
-            return False
-        left = self.evaluate_expr(tokens[0], local_vars)
-        op = tokens[1]
-        right = self.evaluate_expr(tokens[2], local_vars)
+        self.functions[fn_name] = fn_lines
+        return index - 1
 
-        if op == "bigger":
-            return left > right
-        elif op == "smaller":
-            return left < right
-        elif op == "equal":
-            return left == right
-        else:
-            return False
+    # ----------------- Loops -----------------
+    def handle_go(self, lines, index):
+        header = lines[index].strip()
+        var_name = header.split()[1]
+        collection_str = header[header.find("{"):].strip()
+        collection = self.evaluate(collection_str)
+        loop_lines = []
+        index += 1
+        while index < len(lines):
+            line = lines[index]
+            if line.startswith(" ") or line.startswith("\t"):
+                loop_lines.append(line)
+                index += 1
+            else:
+                break
+        for item in collection:
+            self.vars[var_name] = item
+            self.execute_block(loop_lines)
+        return index - 1
 
-    def call_function(self, call, local_vars):
-        name, args = call.split("(", 1)
-        name = name.strip()
-        args = args[:-1].strip()
-        args = [a.strip() for a in args.split(",")] if args else []
+    def handle_until(self, lines, index):
+        header = lines[index].strip()
+        condition_str = header[len("until "):]
+        loop_lines = []
+        index += 1
+        while index < len(lines):
+            line = lines[index]
+            if line.startswith(" ") or line.startswith("\t"):
+                loop_lines.append(line)
+                index += 1
+            else:
+                break
+        while self.evaluate(condition_str) == False:
+            self.execute_block(loop_lines)
+        return index - 1
 
-        if name not in self.functions:
-            print(f"Unknown function: {name}")
-            return None
+    # ----------------- Execute Line -----------------
+    def execute_line(self, line):
+        line = line.strip()
+        if not line:
+            return
 
-        fn_args, body = self.functions[name]
-        new_locals = local_vars.copy()
-        for i, arg_name in enumerate(fn_args):
-            if i < len(args):
-                new_locals[arg_name] = args[i] if not isinstance(args[i], str) else self.evaluate_expr(args[i], local_vars)
+        # Function call
+        if "(" in line and ")" in line:
+            fn_name = line.split("(")[0]
+            args_str = line[line.find("(")+1:line.find(")")]
+            args = [self.evaluate(arg.strip()) for arg in args_str.split(",") if arg.strip()]
+            if fn_name in self.functions:
+                try:
+                    # Store arguments as local vars
+                    self.execute_block(self.functions[fn_name])
+                except ReturnValue as rv:
+                    return rv.value
+            else:
+                # maybe built-in function
+                self.execute_builtin(fn_name, args)
+            return
 
+        # Variable assignment
+        if " is " in line:
+            var, expr = line.split(" is ", 1)
+            self.vars[var.strip()] = self.evaluate(expr.strip())
+            return
+
+        # Say command
+        if line.startswith("say "):
+            print(self.evaluate(line[4:].strip()))
+            return
+
+        # Out command
+        if line.startswith("out "):
+            raise ReturnValue(self.evaluate(line[4:].strip()))
+
+        raise Exception(f"Unknown command: {line}")
+
+    # ----------------- Built-ins -----------------
+    def execute_builtin(self, name, args):
+        if name == "add":
+            return sum(args)
+        if name == "double":
+            return args[0] * 2
+        raise Exception(f"Unknown function: {name}")
+
+    # ----------------- Evaluator -----------------
+    def evaluate(self, expr):
+        expr = expr.strip()
+        # Numbers
         try:
-            return self.execute_block(body, 0, len(body), new_locals, top_level=False)
-        except ReturnValue as rv:
-            return rv.value
+            if "." in expr:
+                return float(expr)
+            return int(expr)
+        except ValueError:
+            pass
 
-    # ------------------- Built-in Commands -------------------
+        # Strings
+        if expr.startswith('"') and expr.endswith('"'):
+            return expr[1:-1]
 
-    def cmd_say(self, args, local_vars):
-        if args.startswith('"') and args.endswith('"'):
-            print(args[1:-1])
-        else:
-            value = self.evaluate_expr(args, local_vars)
-            print(value)
+        # Variables
+        if expr in self.vars:
+            return self.vars[expr]
 
-    def cmd_type(self, args, local_vars):
-        value = self.evaluate_expr(args, local_vars)
-        print(type(value).__name__)
+        # Lists
+        if expr.startswith("{") and expr.endswith("}"):
+            content = expr[1:-1].strip()
+            if not content:
+                return []
+            return [self.evaluate(x.strip()) for x in content.split(",")]
 
-# ------------------- Entry Point -------------------
+        # Dictionaries
+        if expr.startswith("[") and expr.endswith("]"):
+            content = expr[1:-1].strip()
+            result = {}
+            if not content:
+                return result
+            for pair in content.split(","):
+                key, val = pair.split(":")
+                result[self.evaluate(key.strip())] = self.evaluate(val.strip())
+            return result
 
+        # Boolean values
+        if expr == "True":
+            return True
+        if expr == "False":
+            return False
+
+        # Simple math
+        for op in ["+", "-", "*", "/", "//", "%", "^"]:
+            if op in expr:
+                a, b = expr.split(op)
+                a = self.evaluate(a.strip())
+                b = self.evaluate(b.strip())
+                if op == "+": return a + b
+                if op == "-": return a - b
+                if op == "*": return a * b
+                if op == "/": return a / b
+                if op == "//": return a // b
+                if op == "%": return a % b
+                if op == "^": return a ** b
+
+        return expr
+
+# ----------------- Main -----------------
 def main():
+    import sys
     if len(sys.argv) < 2:
         print("Usage: pebble file.pb")
-    else:
-        PebbleInterpreter().run(sys.argv[1])
+        return
+    PebbleInterpreter().run(sys.argv[1])
 
 if __name__ == "__main__":
     main()

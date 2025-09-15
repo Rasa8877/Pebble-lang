@@ -7,7 +7,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="pebble-lang",
-    version="1.0.1",
+    version="1.0.3",
     description="Pebble programming language interpreter in Python",
     long_description=long_description,         # <-- add this
     long_description_content_type="text/markdown",  # <-- important
