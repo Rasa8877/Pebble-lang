@@ -42,10 +42,12 @@ pebble examples/hello.pb
 say "Hello Pebble!"
 
 x is 2 ^ 3
-say x            ! Output: 8
+say x
+! Output: 8
 
 nums is {1, 2, 3}
-say len(nums)    ! Output: 3
+say len(nums)
+! Output: 3
 
 fnc greet(name):
     say "Hello " + name
@@ -58,8 +60,9 @@ greet("Rasa")
 ## Loops and Conditions
 
 ```pebble
-go i in 1 to 5:
-    say i
+nums is {0, 1, 2}
+go i in nums:
+    say "Hello"
 
 x is 10
 if x big 5:
@@ -68,30 +71,34 @@ if x big 5:
 
 ---
 
-## Error Handling
-
-```pebble
-try:
-    x is 5 / 0
-catch e:
-    say "Error: " + e
-finally:
-    say "Cleanup done"
-```
-
----
-
 ## Collections
 
 ```pebble
-numbers is {1, 2, 3}
-numbers is append(numbers, 4)
-say numbers        ! Output: [1, 2, 3, 4]
+numbers is {10, 20, 30}
+say numbers
 
 person is [name: "Rasa", age: 14]
-say keys(person)   ! Output: ["name", "age"]
-say values(person) ! Output: ["Rasa", 14]
+say person
+
+go n in numbers:
+    say n * 2
+
+say person["name"]
+say person["age"]
 ```
+
+This will output:
+
+```
+[10, 20, 30]
+{'name': 'Rasa', 'age': 14}
+20
+40
+60
+Rasa
+14
+```
+
 
 ---
 
