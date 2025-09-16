@@ -13,7 +13,6 @@ It’s designed to be simple, readable, and fun for learners and hobbyists.
 - **Collections:** Lists `{}` and dictionaries `[]` with easy syntax
 - **Input:** `inp[...]` to get user input
 - **Comments:** Use `!` to ignore text on a line
-- **Error Handling:** `try-catch-finally` blocks for graceful error handling
 - **Math:** `+`, `-`, `*`, `/`, `//`, `%`, `^`, and functions like `abs()`, `round()`, `sqrt()`, etc.
 - **Easy to run:** Execute `.pb` files with a single command
 
