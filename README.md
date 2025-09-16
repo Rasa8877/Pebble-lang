@@ -15,7 +15,6 @@ It’s designed to be simple, readable, and fun for learners and hobbyists.
 - **Comments:** Use `!` to ignore text on a line
 - **Error Handling:** `try-catch-finally` blocks for graceful error handling
 - **Math:** `+`, `-`, `*`, `/`, `//`, `%`, `^`, and functions like `abs()`, `round()`, `sqrt()`, etc.
-- **Utility Functions:** `len`, `range`, `keys`, `values`, `append`, `remove`, `contains`, `str`, `int`, `float`
 - **Easy to run:** Execute `.pb` files with a single command
 
 ---
