@@ -44,7 +44,10 @@ say x
 ! Output: 8
 
 nums is {1, 2, 3}
-say len(nums)
+count is 0
+go n in nums:
+    count is count + 1
+say count
 ! Output: 3
 
 fnc greet(name):
