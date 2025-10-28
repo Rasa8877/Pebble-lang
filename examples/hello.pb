@@ -1,11 +1,17 @@
-numbers is {10, 20, 30}
-say numbers
+say "Hello Pebble!"
 
-person is [name: "Rasa", age: 14]
-say person
+x is 2 ^ 3
+say x
+! Output: 8
 
-go n in numbers:
-    say n * 2
+nums is {1, 2, 3}
+count is 0
+go n in nums:
+    count is count + 1
+say count
+! Output: 3
 
-say person["name"]
-say person["age"]
+fnc greet(name):
+    say "Hello " + name
+
+greet("Rasa")
