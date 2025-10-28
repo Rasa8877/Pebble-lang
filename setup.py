@@ -6,7 +6,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="pebble-lang",
-    version="2.0.0",
+    version="2.1.0",
     author="Rasa8877",
     author_email="letperhut@gmail.com",
     description="Pebble programming language interpreter in Python",
@@ -17,7 +17,7 @@ setup(
     python_requires=">=3.8",
     entry_points={
         "console_scripts": [
-            "pebble=pebble.interpreter:main",
+            "pebble=pebble.parser:main",
         ],
     },
     include_package_data=True,
