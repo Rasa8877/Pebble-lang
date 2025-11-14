@@ -1,4 +1,4 @@
-from .parser import PebbleParser, main
+from .interpreter import PebbleInterpreter, main
 
-__all__ = ["PebbleParser", "main"]
-__version__ = "2.1.0"
+__all__ = ["PebbleInterpreter", "main"]
+__version__ = "2.2.0"
