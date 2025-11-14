@@ -1,6 +1,6 @@
 say "Hello Pebble!"
 
-x is 2 ^ 3
+x is 2 ^ 4
 say x
 ! Output: 8
 
