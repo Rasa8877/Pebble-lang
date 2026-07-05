@@ -121,7 +121,7 @@ See [LICENSE](LICENSE) for details.
 
 ## Contributing
 
-Contributions are welcome! Please open issues or pull requests on the [GitHub repository](https://github.com/yourusername/pebble-lang).
+Contributions are welcome! Please open issues or pull requests on the [GitHub repository](https://github.com/Rasa8877/pebble-lang).
 
 ---
 
