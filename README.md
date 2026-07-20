@@ -14,15 +14,7 @@ It’s designed to be simple, readable, and fun for learners and hobbyists.
 - **Input:** `inp[...]` to get user input
 - **Comments:** Use `!` to ignore text on a line
 - **Math:** `+`, `-`, `*`, `/`, `//`, `%`, `^`
-- **Easy to run:** Execute `.pb` files with a single command
-
----
-
-## Installation
-
-```bash
-pip install pebble-lang
-````
+- **Easy to run:** Execute `.peb` files with a single command
 
 ---
 
@@ -31,10 +23,16 @@ pip install pebble-lang
 ### Running a Pebble program
 
 ```bash
-pebble examples/hello.pb
+pebble examples/hello.peb
 ```
 
-### Example Pebble program (`hello.pb`)
+If you’re running the interpreter from source, use:
+
+```bash
+python pebble.py examples/hello.peb
+```
+
+### Example Pebble program (`hello.peb`)
 
 ```pebble
 say "Hello Pebble!"
@@ -114,7 +112,7 @@ say "Hello " + name
 
 ## License
 
-MIT License
+MIT License  
 See [LICENSE](LICENSE) for details.
 
 ---
@@ -127,5 +125,5 @@ Contributions are welcome! Please open issues or pull requests on the [GitHub re
 
 ## Contact
 
-Created by Rasa8877
+Created by Rasa8877  
 GitHub: [https://github.com/Rasa8877/pebble-lang](https://github.com/Rasa8877/pebble-lang)
