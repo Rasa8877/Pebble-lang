@@ -23,7 +23,7 @@ It’s designed to be simple, readable, and fun for learners and hobbyists.
 ### Running a Pebble program
 
 ```bash
-python pebble/pebble.py examples/hello.peb
+python pebble/interpreter.py examples/hello.peb
 ```
 
 ### Example Pebble program (`hello.peb`)
