@@ -17,4 +17,4 @@ dist/
 *.tmp
 
 # Local test codes
-test-wawe.peb
+local-tests.peb

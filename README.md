@@ -1,6 +1,6 @@
 # Pebble Programming Language
 
-**Version 3.5.0**  
+**Version 3.6.0**  
 Pebble is a beginner‑friendly programming language built in Python.  
 It’s designed to be simple, readable, and fun for learners and hobbyists.
 
@@ -12,7 +12,7 @@ It’s designed to be simple, readable, and fun for learners and hobbyists.
 - **Loops:** `go` (for loops) and `until` (while loops)
 - **Conditions:** `if` with comparison keywords `big`, `sml`, `eql`, and logical operators `and`, `or`, `not`, `!`
 - **Collections:** Lists `{}` and dictionaries `[]` with easy syntax
-- **Input:** `inp[...]` to get user input
+- **Input:** `inp[...]` to get user input, and `num(...)` to convert input to numbers
 - **Comments:** `$` at the start of a line (comments are ignored)
 - **Math:** `+`, `-`, `*`, `/`, `//`, `%`, `^` (exponentiation)
 - **Easy to run:** Execute `.peb` files with a single command
@@ -110,6 +110,34 @@ if !false:
 
 ---
 
+## Numbers from Input
+
+The `inp[...]` function returns a **string**. To do arithmetic with user input, use the `num(...)` built‑in to convert it to a number (integer or float).  
+Example – a simple calculator:
+
+```pebble
+$ Calculator with num()
+a is num(inp["First number: "])
+b is num(inp["Second number: "])
+op is inp["Operator (+, -, *, /): "]
+
+if op eql "+":
+    say a + b
+if op eql "-":
+    say a - b
+if op eql "*":
+    say a * b
+if op eql "/":
+    if b eql 0:
+        say "Cannot divide by zero"
+    if ! (b eql 0):
+        say a / b
+```
+
+If you enter `5`, `2`, `+`, the output will be `7` – not `52`!
+
+---
+
 ## Collections
 
 ```pebble
@@ -140,7 +168,9 @@ Rasa
 
 ---
 
-## Input
+## Input (Text Only)
+
+For plain text input (without conversion), you can still use `inp` directly:
 
 ```pebble
 name is inp["Enter your name: "]

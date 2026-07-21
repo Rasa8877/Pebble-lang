@@ -59,6 +59,7 @@ class PebbleInterpreter:
         self.builtins = {
             "say": self.execute_builtin,
             "inp": self.execute_builtin,
+            "num": self.execute_builtin,
         }
 
     # ---------- Main execution ----------
@@ -575,6 +576,17 @@ class PebbleInterpreter:
         if name == "inp":
             prompt = args[0] if args else ""
             return input(prompt)
+        if name == "num":
+            if not args:
+                raise Exception("num() requires one argument")
+            val = args[0]
+            try:
+                return int(val)
+            except ValueError:
+                try:
+                    return float(val)
+                except ValueError:
+                    raise Exception(f"Cannot convert '{val}' to number")
         raise Exception(f"Unknown builtin: {name}")
 
     # ---------- Block detection ----------
