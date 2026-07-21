@@ -77,7 +77,7 @@ class PebbleInterpreter:
         while i < len(lines):
             raw_line = lines[i].rstrip("\n").replace("\t", "    ")
             line = raw_line.strip()
-            if not line or line.startswith("!"):
+            if not line or line.startswith("$"):   # comments with $
                 i += 1
                 continue
 
@@ -116,16 +116,29 @@ class PebbleInterpreter:
                 value = self.evaluate_expression(line[4:].strip())
                 raise ReturnValue(value)
 
+            # ----- if statement (fixed) -----
             if line.startswith("if "):
+                # Check if it's an inline if with a statement after colon
                 if ":" in line:
-                    cond, stmt = line[3:].split(":", 1)
-                    if self.evaluate_condition(cond.strip()):
-                        self.execute_line(stmt.strip(), following_lines, next_indent_level, line_num)
+                    cond_part, rest = line[3:].split(":", 1)
+                    cond_part = cond_part.strip()
+                    rest = rest.strip()
+                    if rest:
+                        # Inline statement
+                        if self.evaluate_condition(cond_part):
+                            self.execute_line(rest, following_lines, next_indent_level, line_num)
+                        return 0
+                    else:
+                        # Block if – condition is cond_part
+                        cond = cond_part
                 else:
                     cond = line[3:].strip()
-                    if self.evaluate_condition(cond):
-                        self.execute_block(following_lines, next_indent_level)
-                return 0
+
+                block_len = self.find_block(following_lines, next_indent_level)
+                if self.evaluate_condition(cond):
+                    block = following_lines[:block_len]
+                    self.execute_block(block, next_indent_level)
+                return block_len
 
             if line.startswith("until "):
                 cond_expr = line[6:].strip().rstrip(":")
@@ -254,7 +267,7 @@ class PebbleInterpreter:
                 i += 1
                 continue
 
-            # Multi-character operators, including ^ -> **
+            # Multi-character operators, including ^ -> ** and '!'
             if ch in '+-*/%^=!<>':
                 op = ch
                 i += 1
@@ -307,8 +320,32 @@ class PebbleInterpreter:
             return tok
 
         def parse_expression(self):
+            return self.parse_or()
+
+        # ---------- Logical operators ----------
+        def parse_or(self):
+            left = self.parse_and()
+            while self.peek() and self.peek()[0] == 'IDENT' and self.peek()[1] == 'or':
+                self.consume()
+                right = self.parse_and()
+                left = left or right
+            return left
+
+        def parse_and(self):
+            left = self.parse_not()
+            while self.peek() and self.peek()[0] == 'IDENT' and self.peek()[1] == 'and':
+                self.consume()
+                right = self.parse_not()
+                left = left and right
+            return left
+
+        def parse_not(self):
+            if self.peek() and self.peek()[0] == 'IDENT' and self.peek()[1] == 'not':
+                self.consume()
+                return not self.parse_comparison()
             return self.parse_comparison()
 
+        # ---------- Comparisons ----------
         def parse_comparison(self):
             left = self.parse_add_sub()
             tok = self.peek()
@@ -331,6 +368,7 @@ class PebbleInterpreter:
                 tok = self.peek()
             return left
 
+        # ---------- Arithmetic ----------
         def parse_add_sub(self):
             left = self.parse_mul_div()
             tok = self.peek()
@@ -373,11 +411,16 @@ class PebbleInterpreter:
 
         def parse_unary(self):
             tok = self.peek()
-            if tok and tok[0] == 'OP' and tok[1] == '-':
-                self.consume()
-                return -self.parse_unary()
+            if tok and tok[0] == 'OP':
+                if tok[1] == '-':
+                    self.consume()
+                    return -self.parse_unary()
+                elif tok[1] == '!':   # logical NOT
+                    self.consume()
+                    return not self.parse_unary()
             return self.parse_primary()
 
+        # ---------- Primary ----------
         def parse_primary(self):
             tok = self.peek()
             if not tok:
@@ -545,7 +588,7 @@ class PebbleInterpreter:
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: pebble <file.pb>")
+        print("Usage: pebble <file.peb>")
         sys.exit(1)
     PebbleInterpreter().run(sys.argv[1])
 
