@@ -66,7 +66,6 @@ if x big 5:
 
 ---
 
-## WAWE – Why Add When Else Exists
 ## WAWE – Why Add When Exists
 
 Pebble does **not** have a separate `else` keyword – and it doesn’t need one!  
